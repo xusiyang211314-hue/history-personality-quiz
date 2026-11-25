@@ -4,19 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f5f0e5">
-    <meta name="description" content="从 40 道生活情境题中，找到与你性格相近的一位中国历史人物。">
+    <meta name="description" content="选择 10 题速测或 40 题完整版，从生活情境中找到与你性格相近的一位中国历史人物。">
     <title>测测你的灵魂对应哪位中国历史人物</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=2">
     <script defer src="assets/ink-landscape.js"></script>
     <script defer src="quiz-data.js"></script>
-    <script defer src="scoring.js"></script>
-    <script defer src="app.js"></script>
+    <script defer src="scoring.js?v=2"></script>
+    <script defer src="app.js?v=2"></script>
   </head>
   <body>
     <header class="site-header shell">
       <div class="brand"><span class="brand-seal" aria-hidden="true">鉴</span><span>古人灵魂鉴</span></div>
-      <button class="text-button help-button" id="show-help" type="button" aria-label="玩法说明">玩法说明</button>
+      <nav class="header-links" aria-label="测试导航">
+        <button class="text-button help-button" id="show-help" type="button" aria-label="玩法说明">玩法说明</button>
+        <a class="text-button" href="https://www.16personalities.com/ch/人格测试" target="_blank" rel="noopener noreferrer">MBTI 风格测试</a>
+      </nav>
     </header>
 
     <main class="shell">
@@ -26,6 +29,13 @@
             <p class="eyebrow">趣味人格测试</p>
             <h1 id="home-title" tabindex="-1">测测你的灵魂<br>对应哪位<br><span>中国历史人物</span></h1>
             <p class="intro">你会是运筹帷幄的谋士、随性远游的诗人，还是归园田居的隐士？从平日的小习惯里找找答案。</p>
+            <fieldset class="quiz-modes" id="quiz-modes">
+              <legend>选择版本</legend>
+              <div class="mode-options">
+                <label class="mode-choice"><input type="radio" name="version" value="quick" checked><span><strong>10 题速测</strong><small>约 1–2 分钟</small></span></label>
+                <label class="mode-choice"><input type="radio" name="version" value="full"><span><strong>40 题完整版</strong><small>约 5–7 分钟</small></span></label>
+              </div>
+            </fieldset>
             <button class="button primary start-button" id="start" type="button"><span class="button-mark" aria-hidden="true"></span><span id="start-label">开始测试</span></button>
             <noscript><p class="noscript-note">请在浏览器中启用 JavaScript 后重新打开本页。</p></noscript>
           </div>
@@ -37,8 +47,8 @@
         </div>
 
         <dl class="home-facts">
-          <div><dt>题目数量</dt><dd><strong>40</strong> 道情境题</dd></div>
-          <div><dt>预计用时</dt><dd>约 <strong>6</strong> 分钟</dd></div>
+          <div><dt>题目形式</dt><dd>生活情境单选</dd></div>
+          <div><dt>覆盖主题</dt><dd><strong>5</strong> 组生活场景</dd></div>
           <div><dt>匹配结果</dt><dd><strong>8</strong> 位历史人物</dd></div>
         </dl>
       </section>
@@ -49,7 +59,7 @@
             <button class="text-button" id="back-home" type="button">返回首页</button>
             <div class="answered-count" id="answered-count"></div>
           </div>
-          <div class="progress-track" id="progress" role="progressbar" aria-label="答题进度" aria-valuemin="0" aria-valuemax="40" aria-valuenow="0">
+          <div class="progress-track" id="progress" role="progressbar" aria-label="答题进度" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
             <div class="progress-fill" id="progress-fill"></div>
           </div>
           <div class="question-card">
@@ -70,7 +80,7 @@
 
       <section id="result" class="screen result-screen" aria-labelledby="result-heading" hidden>
         <div class="section-lead">
-          <p class="eyebrow">测试结果</p>
+          <p class="eyebrow" id="result-mode">测试结果</p>
           <h2 id="result-heading" tabindex="-1">你的灵魂人物</h2>
         </div>
         <div class="result-layout">
@@ -91,6 +101,7 @@
               <button class="button primary" id="download" type="button">保存分享图</button>
               <button class="button secondary" id="restart" type="button">重新测试</button>
             </div>
+            <button class="text-button switch-mode" id="choose-version" type="button">切换测试版本</button>
             <p class="download-status" id="download-status" role="status"></p>
           </div>
           <div class="result-details">
@@ -119,7 +130,7 @@
 
     <dialog class="help-dialog" id="help" aria-labelledby="help-title">
       <h2 id="help-title">玩法说明</h2>
-      <p>每道题选一个最像你平时会做的选项。可以回到上一题修改，答完 40 题后，网页会自动匹配一位古人。</p>
+      <p>在首页选择 10 题速测或 40 题完整版。每题选一个最像你平时会做的选项，可以返回上一题修改，答完所选版本后就会自动匹配一位古人。</p>
       <p>人物解读取自历史形象和文学印象。答题和计分在本机完成。</p>
       <form method="dialog"><button class="button primary" autofocus>明白了</button></form>
     </dialog>

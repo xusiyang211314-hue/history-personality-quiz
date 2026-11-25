@@ -12,10 +12,13 @@ const previousButton = byId("previous");
 const nextButton = byId("next");
 const downloadButton = byId("download");
 const downloadStatus = byId("download-status");
-const questionCount = QUESTIONS.length;
-
-let answers = new Array(questionCount).fill(null);
-let currentQuestion = 0;
+const modePicker = byId("quiz-modes");
+const makeSession = (questions, label) => ({ questions, label, answers: new Array(questions.length).fill(null), cursor: 0 });
+const sessions = {
+  quick: makeSession(QUESTIONS.filter((_, index) => index % 4 === 0), "10 题速测"),
+  full: makeSession(QUESTIONS, "40 题完整版"),
+};
+let session = sessions[modePicker?.querySelector("input:checked")?.value ?? "full"];
 let currentProfile = null;
 
 heroArt.src = INK_LANDSCAPE;
@@ -28,16 +31,21 @@ function showScreen(id, focusTarget) {
 }
 
 function updateProgress() {
+  const { answers, cursor, questions } = session;
+  const questionCount = questions.length;
   const completed = answers.filter((answer) => answer !== null).length;
   byId("answered-count").textContent = `已答 ${completed} / ${questionCount} 题`;
+  byId("progress").setAttribute("aria-valuemax", String(questionCount));
   byId("progress").setAttribute("aria-valuenow", String(completed));
   byId("progress-fill").style.width = `${(completed / questionCount) * 100}%`;
-  nextButton.disabled = answers[currentQuestion] === null;
+  nextButton.disabled = answers[cursor] === null;
 }
 
 function renderQuestion({ focus = true } = {}) {
-  const question = QUESTIONS[currentQuestion];
-  byId("question-meta").textContent = `第 ${currentQuestion + 1} / ${questionCount} 题 · ${question.category}`;
+  const { answers, cursor, questions } = session;
+  const questionCount = questions.length;
+  const question = questions[cursor];
+  byId("question-meta").textContent = `第 ${cursor + 1} / ${questionCount} 题 · ${question.category}`;
   questionTitle.textContent = question.prompt;
 
   const options = question.options.map((option, index) => {
@@ -48,7 +56,7 @@ function renderQuestion({ focus = true } = {}) {
     input.type = "radio";
     input.name = "answer";
     input.value = String(index);
-    input.checked = answers[currentQuestion] === index;
+    input.checked = answers[cursor] === index;
 
     const face = document.createElement("span");
     face.className = "option-face";
@@ -66,8 +74,8 @@ function renderQuestion({ focus = true } = {}) {
   });
 
   optionsContainer.replaceChildren(...options);
-  previousButton.disabled = currentQuestion === 0;
-  nextButton.textContent = currentQuestion === questionCount - 1 ? "查看结果" : "下一题";
+  previousButton.disabled = cursor === 0;
+  nextButton.textContent = cursor === questionCount - 1 ? "查看结果" : "下一题";
   updateProgress();
 
   if (focus) {
@@ -84,8 +92,8 @@ function renderQuestion({ focus = true } = {}) {
 }
 
 function resetQuiz() {
-  answers = new Array(questionCount).fill(null);
-  currentQuestion = 0;
+  session.answers.fill(null);
+  session.cursor = 0;
   currentProfile = null;
   startLabel.textContent = "开始测试";
 }
@@ -97,6 +105,7 @@ function enterQuiz() {
 
 function renderResult({ profile, tendencies }) {
   currentProfile = profile;
+  if (byId("result-mode")) byId("result-mode").textContent = session.label;
   byId("poster").style.setProperty("--profile-ink", profile.color);
   byId("result-seal").textContent = profile.seal;
   byId("result-era").textContent = `${profile.era} · ${profile.role}`;
@@ -227,6 +236,7 @@ function createShareCanvas(profile) {
 
 async function downloadShareImage() {
   const profile = currentProfile;
+  const source = session;
   if (!profile) return;
   downloadButton.disabled = true;
   downloadStatus.textContent = "正在生成分享图…";
@@ -236,7 +246,7 @@ async function downloadShareImage() {
     const canvas = createShareCanvas(profile);
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
     if (!blob) throw new Error("无法生成分享图。");
-    if (profile !== currentProfile) return;
+    if (profile !== currentProfile || source !== session) return;
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -248,38 +258,51 @@ async function downloadShareImage() {
     setTimeout(() => URL.revokeObjectURL(url), 60000);
     downloadStatus.textContent = "分享图已生成，请查看浏览器下载。";
   } catch {
-    if (profile === currentProfile) downloadStatus.textContent = "暂时无法保存图片，可以直接截取上方人物卡。";
+    if (profile === currentProfile && source === session) downloadStatus.textContent = "暂时无法保存图片，可以直接截取上方人物卡。";
   } finally {
     downloadButton.disabled = false;
   }
 }
 
-startButton.addEventListener("click", enterQuiz);
-byId("back-home").addEventListener("click", () => {
-  startLabel.textContent = answers.some((answer) => answer !== null) ? "继续测试" : "开始测试";
+function updateStartLabel() {
+  startLabel.textContent = session.answers.some((answer) => answer !== null) ? "继续测试" : "开始测试";
+}
+
+function returnToHome() {
+  updateStartLabel();
   showScreen("home", byId("home-title"));
+}
+
+modePicker?.addEventListener("change", (event) => {
+  if (event.target.name !== "version") return;
+  session = sessions[event.target.value];
+  currentProfile = null;
+  updateStartLabel();
 });
+startButton.addEventListener("click", enterQuiz);
+byId("back-home").addEventListener("click", returnToHome);
+byId("choose-version")?.addEventListener("click", returnToHome);
 
 optionsContainer.addEventListener("change", (event) => {
   if (event.target.name !== "answer" || !event.target.checked) return;
-  answers[currentQuestion] = Number(event.target.value);
+  session.answers[session.cursor] = Number(event.target.value);
   updateProgress();
 });
 
 previousButton.addEventListener("click", () => {
-  if (currentQuestion === 0) return;
-  currentQuestion -= 1;
+  if (session.cursor === 0) return;
+  session.cursor -= 1;
   renderQuestion();
 });
 
 byId("answer-form").addEventListener("submit", (event) => {
   event.preventDefault();
-  if (answers[currentQuestion] === null) return;
+  if (session.answers[session.cursor] === null) return;
 
-  if (currentQuestion === questionCount - 1) {
-    renderResult(scoreAnswers(answers));
+  if (session.cursor === session.questions.length - 1) {
+    renderResult(scoreAnswers(session.answers, session.questions));
   } else {
-    currentQuestion += 1;
+    session.cursor += 1;
     renderQuestion();
   }
 });

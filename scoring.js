@@ -1,12 +1,12 @@
 "use strict";
 
-function scoreAnswers(answers) {
-  if (!Array.isArray(answers) || answers.length !== QUESTIONS.length) {
+function scoreAnswers(answers, questions = QUESTIONS) {
+  if (!Array.isArray(answers) || answers.length !== questions.length) {
     throw new RangeError("请完成全部题目后再查看结果。");
   }
 
   const scores = Object.fromEntries(Object.keys(DIMENSIONS).map((dimension) => [dimension, 0]));
-  const choices = QUESTIONS.map((question, index) => {
+  const choices = questions.map((question, index) => {
     const answer = answers[index];
     if (!Number.isInteger(answer) || answer < 0 || answer >= question.options.length) {
       throw new RangeError(`第 ${index + 1} 题缺少有效选项。`);
