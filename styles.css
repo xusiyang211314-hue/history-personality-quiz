@@ -47,9 +47,6 @@ p, h1, h2, h3, blockquote, dd { margin: 0; }
   border-bottom: 1px solid var(--line);
 }
 
-.header-links { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0 clamp(9px, 2.5vw, 23px); }
-.header-links > * { white-space: nowrap; }
-.header-links > a { text-decoration-thickness: 1px; }
 
 .brand {
   display: flex;
